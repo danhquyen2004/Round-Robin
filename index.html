@@ -4,108 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Round Robin Visualization</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4; /* Light background for contrast */
-            color: #333; /* Dark text for readability */
-            margin: 0;
-            padding: 20px;
-        }
-    
-        h2 {
-            text-align: center; /* Center align the title */
-            color: #2c3e50; /* Darker color for the header */
-        }
-    
-        table {
-            width: 80%; /* Centering the table */
-            margin: 20px auto; /* Centered with auto margins */
-            border-collapse: collapse;
-            background-color: white; /* White background for table */
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-        }
-    
-        table, th, td {
-            border: 1px solid #ccc; /* Lighter border color */
-        }
-    
-        th, td {
-            padding: 12px; /* Increased padding for better spacing */
-            text-align: center;
-        }
-    
-        .controls {
-            text-align: center; /* Center align controls */
-            margin: 20px auto; /* Center with auto margins */
-        }
-    
-        input[type="number"] {
-            width: 80px; /* Adjust width for input fields */
-            padding: 5px; /* Add padding for comfort */
-            border: 1px solid #ccc; /* Border for input fields */
-            border-radius: 4px; /* Rounded corners */
-        }
-    
-        button {
-            padding: 10px 15px; /* Adjust padding for buttons */
-            margin: 0 5px; /* Horizontal margin for spacing */
-            background-color: #27ae60; /* Updated color for buttons */
-            color: white;
-            border: none;
-            border-radius: 4px; /* Rounded corners for buttons */
-            cursor: pointer;
-            transition: background-color 0.3s; /* Smooth transition */
-        }
-    
-        button.add-process {
-            background-color: #2980b9; /* Different color for 'Add Process' button */
-        }
-    
-        button:hover {
-            background-color: #2ecc71; /* Lighter color on hover */
-        }
-    
-        button.add-process:hover {
-            background-color: #3498db; /* Lighter color on hover for 'Add Process' */
-        }
-    
-        .chart {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-start;
-            align-items: flex-end;
-            position: relative;
-            height: 200px; /* Set height for chart */
-            background-color: #ecf0f1; /* Background for the chart */
-            padding: 10px; /* Padding around the chart */
-            border-radius: 5px; /* Rounded corners for chart */
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Shadow for depth */
-        }
-    
-        .process-block {
-            height: 40px;
-            margin-right: 2px;
-            text-align: center;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            border-radius: 4px; /* Rounded corners for process blocks */
-        }
-    
-        .process-time {
-            position: absolute;
-            bottom: -20px;
-            font-size: 12px;
-            color: black;
-            background-color: rgba(255, 255, 255, 0.7); /* Light background for better contrast */
-            padding: 2px 4px; /* Padding for time label */
-            border-radius: 3px; /* Rounded corners for time label */
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css"> <!-- Link đến file CSS -->
 </head>
 <body>
 
@@ -115,6 +14,7 @@
     <table id="processTable">
         <tr>
             <th>Process</th>
+            <th>Arrival Time</th>
             <th>Burst Time</th>
         </tr>
     </table>
@@ -133,91 +33,19 @@
         <div id="chart" class="chart"></div>
     </div>
 
-    <script>
-        let processCount = 0;
-        let processes = [];
-        let colors = {}; // To store a unique color for each process
+    <!-- Container to display results -->
+    <div id="resultContainer">
+        <h3>Results:</h3>
+        <table id="resultTable">
+            <tr>
+                <th>Process</th>
+                <th>Completion Time</th>
+                <th>Turnaround Time</th>
+                <th>Waiting Time</th>
+            </tr>
+        </table>
+    </div>
 
-        // Function to add a new process row
-        function addProcess() {
-            processCount++;
-            const table = document.getElementById('processTable');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>P${processCount}</td>
-                <td><input type="number" min="1" id="burst${processCount}" value="10"></td>
-            `;
-            table.appendChild(row);
-
-            // Assign a unique color for this process
-            colors[`P${processCount}`] = getRandomColor();
-        }
-
-        // Function to visualize the round robin process scheduling
-        function visualize() {
-            processes = []; // Reset process list
-            const chart = document.getElementById('chart');
-            chart.innerHTML = ''; // Clear previous chart
-
-            const timeQuantum = parseInt(document.getElementById('timeQuantum').value);
-
-            // Get input values for each process
-            for (let i = 1; i <= processCount; i++) {
-                const burstTime = document.getElementById(`burst${i}`).value;
-                processes.push({
-                    processId: `P${i}`,
-                    burstTime: parseInt(burstTime),
-                    remainingTime: parseInt(burstTime)
-                });
-            }
-
-            // Run Round Robin algorithm
-            let time = 0;
-            let allDone = false;
-
-            while (!allDone) {
-                allDone = true; // Assume all processes are done
-                processes.forEach((process) => {
-                    if (process.remainingTime > 0) {
-                        allDone = false; // If any process is not done, set to false
-                        const executeTime = Math.min(timeQuantum, process.remainingTime);
-
-                        // Update remaining time
-                        process.remainingTime -= executeTime;
-
-                        // Create process block for Gantt chart
-                        const processBlock = document.createElement('div');
-                        processBlock.classList.add('process-block');
-                        processBlock.style.width = `${executeTime * 20}px`; // Adjust width based on execution time
-                        processBlock.style.backgroundColor = colors[process.processId]; // Use consistent color
-                        processBlock.innerHTML = process.processId;
-
-                        // Append start and end time under the process block
-                        const timeLabel = document.createElement('div');
-                        timeLabel.classList.add('process-time');
-                        timeLabel.innerHTML = `${time} - ${time + executeTime}`;
-                        processBlock.appendChild(timeLabel);
-
-                        // Append to chart
-                        chart.appendChild(processBlock);
-
-                        // Increment time
-                        time += executeTime;
-                    }
-                });
-            }
-        }
-
-        // Function to generate random colors for each process block
-        function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        }
-    </script>
-
+    <script src="script.js"></script> <!-- Link đến file JS -->
 </body>
 </html>
